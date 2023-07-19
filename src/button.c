@@ -19,6 +19,7 @@ typedef struct {
   uint16_t history;
   uint32_t down_time;
   uint32_t next_long_time;
+  bool is_hold;
 } debounce_t;
 
 int pin_count = -1;
@@ -74,11 +75,12 @@ static void button_task(void *pvParameter)
                 debounce[idx].down_time = 0;
                 ESP_LOGI(TAG, "%d UP", debounce[idx].pin);
                 send_event(debounce[idx], BUTTON_UP);
-            } else if (debounce[idx].down_time && millis() >= debounce[idx].next_long_time) {
-                ESP_LOGI(TAG, "%d LONG", debounce[idx].pin);
-                debounce[idx].next_long_time = debounce[idx].next_long_time + CONFIG_ESP32_BUTTON_LONG_PRESS_REPEAT_MS;
-                send_event(debounce[idx], BUTTON_HELD);
-            } else if (button_down(&debounce[idx]) && debounce[idx].down_time == 0) {
+            } else if (debounce[idx].down_time && millis() >= debounce[idx].next_long_time && !debounce[idx].is_hold) {
+				debounce[idx].is_hold = true;
+				ESP_LOGI(TAG, "%d LONG", debounce[idx].pin);
+				debounce[idx].next_long_time = debounce[idx].next_long_time + CONFIG_ESP32_BUTTON_LONG_PRESS_REPEAT_MS;
+				send_event(debounce[idx], BUTTON_HELD);
+			} else if (button_down(&debounce[idx]) && debounce[idx].down_time == 0) {
                 debounce[idx].down_time = millis();
                 ESP_LOGI(TAG, "%d DOWN", debounce[idx].pin);
                 debounce[idx].next_long_time = debounce[idx].down_time + CONFIG_ESP32_BUTTON_LONG_PRESS_DURATION_MS;
