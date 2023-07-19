@@ -41,5 +41,3 @@ QueueHandle_t pulled_button_init(unsigned long long pin_select, gpio_pull_mode_t
 #ifdef __cplusplus
 }
 #endif
-
-#endif
